@@ -20,8 +20,8 @@ on:
 jobs:
   build:
     name: Build win-x64
-    # 🏷️ On tag pushes we only publish and upload; building twice would waste a runner.
-    if: github.event_name != 'push' || !startsWith(github.ref, 'refs/tags/')
+    # 🏷️ На теге тоже собираем: условие вида "не на теге" в YAML выглядит безобидно, но лишний
+    #    прогон дешевле, чем релиз, который не собрался из-за хрупкой логики условий.
     runs-on: windows-latest # 🖥️ Windows is required: we build net9.0-windows and use WinForms
     steps:
       - name: Checkout
@@ -57,8 +57,9 @@ jobs:
   release:
     name: Release on tag
     needs: build
-    # 🛡️ `needs: build` alone would block us: when the build job is skipped on a tag push, a
-    #    dependent job is skipped too. We therefore do not depend on it and simply gate on the tag.
+    # 🏷️ ONLY tags produce a release. Branch pushes run the build job and stop here.
+    #    ⚠️ Keep this condition in sync with `on.push.tags` above, otherwise pushing v1.0.0
+    #    silently produces no release (which is exactly what happened on the first attempt).
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: windows-latest
     permissions:
