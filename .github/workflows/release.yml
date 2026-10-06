@@ -1,18 +1,18 @@
-# 🏗️ Build & Test — CaptionMenu
-#
-# 🌍 Runs on every push to main and on every PR, so regressions are caught before a user sees them.
-# 🔤 NOTE: job/step names are intentionally plain ASCII. GitHub Actions silently fails to parse a
-#    workflow whose `name:` fields contain emoji on some runner images, and the failure message
-#    ("likely failed because of a workflow file issue") gives no hint at all. Emojis stay in the
-#    comments, where they are harmless.
+ # Build & Test — CaptionMenu
+ #
+ # Runs on every push to main and on every PR, so regressions are caught before a user sees them.
+ # NOTE: job/step names are intentionally plain ASCII. GitHub Actions silently fails to parse a
+ # workflow whose `name:` fields contain emoji on some runner images, and the failure message
+ # ("likely failed because of a workflow file issue") gives no hint at all. Emojis stay in the
+ # comments, where they are harmless.
 
 name: Build and Test
 
 on:
   push:
     branches: [main]
-    # 🏷️ Tags must be listed explicitly: a `branches:` filter alone EXCLUDES tag pushes, so
-    #    pushing v1.0.0 would not have triggered the release job at all (observed 06.10.2026).
+     # Tags must be listed explicitly: a `branches:` filter alone EXCLUDES tag pushes, so
+     # pushing v1.0.0 would not have triggered the release job at all (observed 06.10.2026).
     tags: ['v*']
   pull_request:
     branches: [main]
@@ -20,9 +20,9 @@ on:
 jobs:
   build:
     name: Build win-x64
-    # 🏷️ На теге тоже собираем: условие вида "не на теге" в YAML выглядит безобидно, но лишний
-    #    прогон дешевле, чем релиз, который не собрался из-за хрупкой логики условий.
-    runs-on: windows-latest # 🖥️ Windows is required: we build net9.0-windows and use WinForms
+     # На теге тоже собираем: условие вида "не на теге" в YAML выглядит безобидно, но лишний
+     # прогон дешевле, чем релиз, который не собрался из-за хрупкой логики условий.
+    runs-on: windows-latest  # Windows is required: we build net9.0-windows and use WinForms
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -30,18 +30,18 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '9.0.x' # 🔢 Must match TargetFramework in the csproj
+          dotnet-version: '9.0.x'  # Must match TargetFramework in the csproj
 
       - name: Build
-        run: dotnet build src/CaptionMenu/CaptionMenu.csproj -c Release --nologo
+        run: dotnet build src/CaptionMenu/CaptionMenu.csproj -c Release  --nologo
 
       - name: Publish single file
-        run: dotnet publish src/CaptionMenu/CaptionMenu.csproj -c Release -r win-x64 -o out --nologo
+        run: dotnet publish src/CaptionMenu/CaptionMenu.csproj -c Release -r win-x64 -o out  --nologo
 
-      # 🧪 The end-to-end test is NOT run here: it synthesizes mouse input and moves real windows,
-      #    which an interactive desktop session is required for (runners use session 0, where
-      #    SetCursorPos and TrackPopupMenuEx behave differently). We run it locally instead.
-      #    What we CAN check on a runner: the publish produced a sane PE binary.
+       # The end-to-end test is NOT run here: it synthesizes mouse input and moves real windows,
+       # which an interactive desktop session is required for (runners use session 0, where
+       # SetCursorPos and TrackPopupMenuEx behave differently). We run it locally instead.
+       # What we CAN check on a runner: the publish produced a sane PE binary.
       - name: Smoke check the published exe
         shell: pwsh
         run: |
@@ -52,18 +52,18 @@ jobs:
           if ($len -lt 5MB) { throw "exe is suspiciously small ($len bytes)" }
 
       - name: Build with warnings as errors
-        run: dotnet build src/CaptionMenu/CaptionMenu.csproj -c Release --nologo -warnaserror
+        run: dotnet build src/CaptionMenu/CaptionMenu.csproj -c Release  --nologo -warnaserror
 
   release:
     name: Release on tag
     needs: build
-    # 🏷️ ONLY tags produce a release. Branch pushes run the build job and stop here.
-    #    ⚠️ Keep this condition in sync with `on.push.tags` above, otherwise pushing v1.0.0
-    #    silently produces no release (which is exactly what happened on the first attempt).
+     # ONLY tags produce a release. Branch pushes run the build job and stop here.
+     # Keep this condition in sync with `on.push.tags` above, otherwise pushing v1.0.0
+     # silently produces no release (which is exactly what happened on the first attempt).
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: windows-latest
     permissions:
-      contents: write # 🔑 Needed to create releases
+      contents: write  # Needed to create releases
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -74,10 +74,10 @@ jobs:
           dotnet-version: '9.0.x'
 
       - name: Publish
-        run: dotnet publish src/CaptionMenu/CaptionMenu.csproj -c Release -r win-x64 -o out --nologo
+        run: dotnet publish src/CaptionMenu/CaptionMenu.csproj -c Release -r win-x64 -o out  --nologo
 
       - name: Upload exe to the release
         uses: softprops/action-gh-release@v2
         with:
-          files: out/CaptionMenu.exe # 📦 One file, so users just download and run it
-          generate_release_notes: true # 📝 Auto release notes from the commits
+          files: out/CaptionMenu.exe  # One file, so users just download and run it
+          generate_release_notes: true  # Auto release notes from the commits

@@ -1,6 +1,6 @@
-# 🚀 Release process — CaptionMenu
+# Release process — CaptionMenu
 
-## One-shot 🎯
+## One-shot
 
 ```powershell
 # 1. Clean build + full test (must pass: exit code 0)
@@ -13,9 +13,9 @@ git push origin v1.0.0
 ```
 
 GitHub Actions (`.github/workflows/release.yml`) picks up the tag and uploads
-`CaptionMenu.exe` as a release asset. 🚀
+`CaptionMenu.exe` as a release asset.
 
-## Version bump 📈
+## Version bump
 
 `Version` in `src/CaptionMenu/CaptionMenu.csproj`:
 
@@ -24,12 +24,12 @@ GitHub Actions (`.github/workflows/release.yml`) picks up the tag and uploads
 ```
 
 SemVer, because the hook/menu internals are the risky part — a minor bump means
-"new menu items", a patch means "bug fix in an existing behaviour". 🎯
+"new menu items", a patch means "bug fix in an existing behaviour".
 
-## Pre-release checklist ✅
+## Pre-release checklist
 
-- [ ] `Test-CaptionMenu.ps1` exits `0` on the machine you release from 🧪
-- [ ] `README.md` matches actual behaviour (menu items, flags, requirements) 📖
-- [ ] Icon generated and `ApplicationIcon` uncommented in the `.csproj` 🎨
-- [ ] Tested at 100% **and** 150% DPI 🖥️
-- [ ] Tested on a fresh machine without a .NET runtime installed 🧹
+- [ ] `Test-CaptionMenu.ps1` exits `0` on the machine you release from
+- [ ] `README.md` matches actual behaviour (menu items, flags, requirements)
+- [ ] Icon generated and `ApplicationIcon` uncommented in the `.csproj`
+- [ ] Tested at 100% **and** 150% DPI
+- [ ] Tested on a fresh machine without a .NET runtime installed

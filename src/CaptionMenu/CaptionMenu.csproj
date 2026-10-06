@@ -1,44 +1,63 @@
-<!-- 🌐 ТАКМЕТА ДЛЯ КОМПИЛЯЦИИ (описание сборки на XML-iru с машинными аннотациями) -->
+<!--
+  Build settings for CaptionMenu.
+  Comments explain WHY a setting exists; without the reason a future reader is
+  likely to remove a flag that looks redundant.
+-->
 <Project Sdk="Microsoft.NET.Sdk">
-  <!-- 📦 ЭЛЕМЕНТ: WinExe = GUI без чёрной консоли в таскбаре (юзер хочет тихий трей-тул, не консоль) -->
+
   <PropertyGroup>
+    <!-- WinExe: no console window. A tray utility that flashes a black console
+         on every autostart looks broken to a normal user. -->
     <OutputType>WinExe</OutputType>
-    <!-- 🎯 ФРЕЙМВОРК: net9.0-windows = современный .NET + Windows API (SetWindowPos, хуки) -->
+
+    <!-- net9.0-windows: current .NET plus the Windows APIs this tool is built on
+         (SetWindowPos, low-level hooks, native menus). -->
     <TargetFramework>net9.0-windows</TargetFramework>
-    <!-- 🪟 WINFORMS: нужно только для NotifyIcon (иконка в трее) и контекстного меню трея -->
+
+    <!-- WinForms is used ONLY for the tray icon and its context menu. The caption
+         menu itself is native Win32, see CaptionMenuPresenter.cs. -->
     <UseWindowsForms>true</UseWindowsForms>
-    <!-- 🔒 NULLABLE: ловим ошибки разыменования на этапе компиляции, а не в рантайме -->
+
+    <!-- Catch null dereferences at compile time instead of at runtime. -->
     <Nullable>enable</Nullable>
-    <!-- 🧹 IMPLICIT USINGS: меньше мусора using-ов в каждом файле -->
+
     <ImplicitUsings>enable</ImplicitUsings>
-    <!-- 📛 ИМЯ СБОРКИ: CaptionMenu.exe = то, что запускаем и кладём в Startup -->
+
     <AssemblyName>CaptionMenu</AssemblyName>
-    <!-- 📦 ROOT NAMESPACE: папка src\CaptionMenu = корень пространства имён -->
     <RootNamespace>CaptionMenu</RootNamespace>
-    <!-- 🖼️ DPI: PerMonitorV2 = меню чёткое на 4K/150%, как в KDE (без мыла) -->
+
+    <!-- PerMonitorV2: the menu must stay crisp on 125/150/200% displays. Without
+         this the popup menu is bitmap-scaled and looks blurry. -->
     <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
-    <!-- 🔋 SELF-CONTAINED: .exe тащит рантайм внутрь себя = работает без установленного .NET -->
+
+    <!-- Self-contained: the exe carries its own runtime, so the tool runs on a
+         machine that has never had .NET installed. -->
     <SelfContained>true</SelfContained>
-    <!-- 🎒 SINGLE FILE: один .exe вместо 200 файлов = легко копировать/автозапуск -->
+
+    <!-- Single file: one exe instead of two hundred files, which makes the
+         download and the autostart shortcut far less fragile. -->
     <PublishSingleFile>true</PublishSingleFile>
-    <!-- 🖥️ RID: win-x64 = 64-разрядная Windows 10/11 (эта машина) -->
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
-    <!-- 🌐 GLOBALIZATION: не тащим ICU (~30 МБ) — нам не нужны разные Cultures -->
-    <InvariantGlobalization>true</InvariantGlobalization>
-    <!-- 🗜️ СЖАТИЕ: меньший exe -->
     <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
-    <!-- 🚫 КОНСОЛЬНЫЙ ЛОГ: пишем в Debug-вывод, а не в stdout (иначе будет чёрное окно) -->
+
+    <!-- No ICU: we do not localise anything, and trimming it saves about 30 MB. -->
+    <InvariantGlobalization>true</InvariantGlobalization>
+
     <DebugType>embedded</DebugType>
-    <!-- 🎨 ИКОНКА ПРИЛОЖЕНИЯ: путь к .ico (см. assets/ICON-PROMPT.md — промт для Leonardo AI).
-         Пока файла нет — строка закомментирована, и тулз работает с иконкой, вшитой компилятором
-         по умолчанию. Раскомментируй после генерации иконки. -->
+
+    <!-- Application icon. Uncomment once assets/CaptionMenu.ico exists; see
+         assets/ICON-PROMPT.md for the Leonardo prompt that generates it. The tray
+         code reads the embedded icon and falls back to the system icon, so the
+         tool works with or without this line. -->
     <!-- <ApplicationIcon>assets\CaptionMenu.ico</ApplicationIcon> -->
-    <!-- 🇬🇧 МЕТАДАННЫЕ ПРОЕКТА: видимы в Properties и в информации о файле exe -->
+
+    <!-- Visible in file properties and in "About" dialogs. -->
     <Product>CaptionMenu</Product>
-    <AssemblyTitle>CaptionMenu — Always on Top for any window</AssemblyTitle>
-    <Description>Right-click any window title bar to pin it on top — like KDE Plasma.</Description>
+    <AssemblyTitle>CaptionMenu - Always on Top for any window</AssemblyTitle>
+    <Description>Right-click any window title bar to pin it on top, like KDE Plasma.</Description>
     <Company>CaptionMenu</Company>
     <Copyright>MIT License</Copyright>
     <NeutralLanguage>en</NeutralLanguage>
   </PropertyGroup>
+
 </Project>
