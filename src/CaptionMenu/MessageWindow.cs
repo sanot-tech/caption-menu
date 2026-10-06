@@ -64,8 +64,8 @@ internal sealed class MessageWindow : NativeWindow, IDisposable
         {
             Caption = "CaptionMenuSink",        // 📝 Имя окна
             Parent = Native.HWND_MESSAGE,       // 📬 Родитель-призрак: не перечислить через оболочку
-            Style = WsPopup,                    // 🎨 WS_POPUP: без заголовка, но живое верхнеуровневое окно
-            ExStyle = WsExToolWindow,                    // 🧰 Скрыто из таскбара/Alt+Tab
+            Style = WsPopup,                 // 🎨 WS_POPUP: без заголовка, но живое верхнеуровневое окно
+            ExStyle = WsExToolWindow,           // 🧰 Скрыто из таскбара/Alt+Tab
             X = -32000, Y = -32000,             // 📐 Уводим за пределы экрана — «визуально» окна нет
             Width = 1, Height = 1,              // 📐 1×1 пиксель
         };

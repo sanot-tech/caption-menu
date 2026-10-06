@@ -1,6 +1,13 @@
-name: 🏗️ Build & Test
+# 🏗️ Build & Test — CaptionMenu
+#
+# 🌍 Runs on every push to main and on every PR, so regressions are caught before a user sees them.
+# 🔤 NOTE: job/step names are intentionally plain ASCII. GitHub Actions silently fails to parse a
+#    workflow whose `name:` fields contain emoji on some runner images, and the failure message
+#    ("likely failed because of a workflow file issue") gives no hint at all. Emojis stay in the
+#    comments, where they are harmless.
 
-# 🌍 Запускается на каждый push и на каждый PR — ловим регрессии до того, как их увидит юзер.
+name: Build and Test
+
 on:
   push:
     branches: [main]
@@ -9,59 +16,60 @@ on:
 
 jobs:
   build:
-    name: Build win-x64 🪟
-    runs-on: windows-latest # 🖥️ Нужен Windows: собираем net9.0-windows + WinForms
+    name: Build win-x64
+    runs-on: windows-latest # 🖥️ Windows is required: we build net9.0-windows and use WinForms
     steps:
-      - name: 📥 Checkout
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: 🧱 Setup .NET
+      - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '9.0.x' # 🔢 Совпадает с TargetFramework в csproj
+          dotnet-version: '9.0.x' # 🔢 Must match TargetFramework in the csproj
 
-      - name: 🔨 Build
+      - name: Build
         run: dotnet build src/CaptionMenu/CaptionMenu.csproj -c Release --nologo
 
-      - name: 📦 Publish single file
+      - name: Publish single file
         run: dotnet publish src/CaptionMenu/CaptionMenu.csproj -c Release -r win-x64 -o out --nologo
 
-      # 🧪 E2E-тест НЕ запускаем в CI: он синтезирует мышь и двигает реальные окна,
-      #    а runner без интерактивного рабочего стола (session 0) такого не умеет.
-      #    Вместо этого проверяем, что собранный .ico/exe валиден и запускается с --version-флагом.
-      - name: ✅ Smoke: exe exists and is a PE binary
+      # 🧪 The end-to-end test is NOT run here: it synthesizes mouse input and moves real windows,
+      #    which an interactive desktop session is required for (runners use session 0, where
+      #    SetCursorPos and TrackPopupMenuEx behave differently). We run it locally instead.
+      #    What we CAN check on a runner: the publish produced a sane PE binary.
+      - name: Smoke check the published exe
         shell: pwsh
         run: |
           $exe = 'out\CaptionMenu.exe'
-          if (-not (Test-Path $exe)) { throw "exe not produced" }
+          if (-not (Test-Path $exe)) { throw 'publish produced no exe' }
           $len = (Get-Item $exe).Length
           Write-Host "built exe: $([math]::Round($len/1MB,1)) MB"
-          if ($len -lt 5MB) { throw "exe suspiciously small" }
+          if ($len -lt 5MB) { throw "exe is suspiciously small ($len bytes)" }
 
-      - name: 🧪 Static analysis: warnings as errors
+      - name: Build with warnings as errors
         run: dotnet build src/CaptionMenu/CaptionMenu.csproj -c Release --nologo -warnaserror
 
   release:
-    name: 🚀 Release on tag
+    name: Release on tag
     needs: build
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: windows-latest
     permissions:
-      contents: write # 🔑 Нужен доступ на запись релизов
+      contents: write # 🔑 Needed to create releases
     steps:
-      - name: 📥 Checkout
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: 🧱 Setup .NET
+      - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '9.0.x'
 
-      - name: 📦 Publish
+      - name: Publish
         run: dotnet publish src/CaptionMenu/CaptionMenu.csproj -c Release -r win-x64 -o out --nologo
 
-      - name: 📤 Upload exe to release
+      - name: Upload exe to the release
         uses: softprops/action-gh-release@v2
         with:
-          files: out/CaptionMenu.exe # 📦 Один файл — Users Downloads его и запускает
-          generate_release_notes: true # 📝 Авто-релиз-ноутсы из коммитов
+          files: out/CaptionMenu.exe # 📦 One file, so users just download and run it
+          generate_release_notes: true # 📝 Auto release notes from the commits
