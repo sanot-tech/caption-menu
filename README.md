@@ -167,7 +167,8 @@ win-caption-menu/
 │   ├── DebugLog.cs              🧪 Opt-in file logging via CAPTIONMENU_DEBUG=1
 │   └── Native.cs                🌐 All P/Invoke and constants in one place
 ├── Test-CaptionMenu.ps1         🧪 End-to-end test with synthetic mouse input
-├── assets/ICON-PROMPT.md        🎨 Leonardo AI prompt for the app icon
+├── assets/ICON-PROMPT.md        🎨 Leonardo AI prompts for the app icon
+├── docs/RELEASING.md            🚀 Release checklist
 └── out/CaptionMenu.exe          🎒 The built single file
 ```
 
@@ -209,7 +210,14 @@ touch the disk on every right-click in the system.
 | No menu on a specific window             | App draws its own caption (Electron, XAML, games) | By design         |
 | No menu on the taskbar / Start           | Shell classes are on the blocklist       | By design                    |
 
-## Keyboard-free operation ♿
+## App icon 🎨
+
+The tray icon is currently the default application icon. `assets/ICON-PROMPT.md` contains ready-to-paste
+prompts for **Leonardo AI** in Windows 11 Fluent style (a window outline with an arrow piercing its top
+edge), plus the steps to convert the result into an `.ico` and wire it up — `TrayIcon.LoadAppIcon()`
+already reads the icon embedded in the exe, so nothing in the code needs changing. 🖼️
+
+## Keyboard operation ♿
 
 `Always on Top` is the default menu item, so `Enter` right after the right-click toggles it.
 `Esc` closes without changing anything.
