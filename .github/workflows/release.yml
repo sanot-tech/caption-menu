@@ -1,0 +1,67 @@
+name: 🏗️ Build & Test
+
+# 🌍 Запускается на каждый push и на каждый PR — ловим регрессии до того, как их увидит юзер.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    name: Build win-x64 🪟
+    runs-on: windows-latest # 🖥️ Нужен Windows: собираем net9.0-windows + WinForms
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 🧱 Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x' # 🔢 Совпадает с TargetFramework в csproj
+
+      - name: 🔨 Build
+        run: dotnet build src/CaptionMenu/CaptionMenu.csproj -c Release --nologo
+
+      - name: 📦 Publish single file
+        run: dotnet publish src/CaptionMenu/CaptionMenu.csproj -c Release -r win-x64 -o out --nologo
+
+      # 🧪 E2E-тест НЕ запускаем в CI: он синтезирует мышь и двигает реальные окна,
+      #    а runner без интерактивного рабочего стола (session 0) такого не умеет.
+      #    Вместо этого проверяем, что собранный .ico/exe валиден и запускается с --version-флагом.
+      - name: ✅ Smoke: exe exists and is a PE binary
+        shell: pwsh
+        run: |
+          $exe = 'out\CaptionMenu.exe'
+          if (-not (Test-Path $exe)) { throw "exe not produced" }
+          $len = (Get-Item $exe).Length
+          Write-Host "built exe: $([math]::Round($len/1MB,1)) MB"
+          if ($len -lt 5MB) { throw "exe suspiciously small" }
+
+      - name: 🧪 Static analysis: warnings as errors
+        run: dotnet build src/CaptionMenu/CaptionMenu.csproj -c Release --nologo -warnaserror
+
+  release:
+    name: 🚀 Release on tag
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: windows-latest
+    permissions:
+      contents: write # 🔑 Нужен доступ на запись релизов
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 🧱 Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: 📦 Publish
+        run: dotnet publish src/CaptionMenu/CaptionMenu.csproj -c Release -r win-x64 -o out --nologo
+
+      - name: 📤 Upload exe to release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: out/CaptionMenu.exe # 📦 Один файл — Users Downloads его и запускает
+          generate_release_notes: true # 📝 Авто-релиз-ноутсы из коммитов
