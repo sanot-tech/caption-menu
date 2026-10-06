@@ -15,21 +15,26 @@ internal static class CaptionMenuPresenter
     {
         // 🛡️ ШАГ 0 (ОБЯЗАТЕЛЬНЫЙ, иначе меню живёт 1 кадр и исчезает):
         //    TrackPopupMenuEx показывает меню ТОЛЬКО если foreground принадлежит вызывающему потоку.
-        //    Мы перехватили ПКМ у чужого окна, значит foreground не наш. Порядок действий:
-        //       1) WM_NULL целевому окну → система считает, что «процесс получил ввод» → выдаёт право.
-        //       2) SetForegroundWindow(наше окно) → теперь foreground наш.
-        //    Только после этого Windows согласится показать меню. См. Native.AllowForegroundFor.
-        Native.AllowForegroundFor(target, owner); // 🎖️ Выбиваем foreground на наше окно-приёмник
+        //    Мы перехватили ПКМ у чужого окна, значит foreground не наш. AllowForegroundFor делает
+        //    два шага: WM_NULL текущему foreground-окну (система считает, что «процесс получил ввод»)
+        //    и принудительный SetForegroundWindow нашего окна через AttachThreadInput. 🎖️
+        Native.AllowForegroundFor(target, owner); // 🎖️ Забираем foreground себе
 
         // 1️⃣ Строим HMENU. При любой ошибке (null) — просто выходим, окно не пострадает.
         var menu = Native.CreatePopupMenu(); // 🍽️ Создаём
-        if (menu == IntPtr.Zero) return; // 🛑 Не получилось — тихо выходим
+        if (menu == IntPtr.Zero)
+        {
+            // 🧹 Откатываем foreground: меню не покажется, а фокус не должен остаться на невидимом окне.
+            Native.ShowWindow(owner, Native.SW_HIDE);      // 🙈 Прячем приёмник
+            Native.SetForegroundWindow(target);             // ↩️ Возвращаем фокус окну пользователя
+            return;                                        // 🚪 Мягкий выход
+        }
 
         try
         {
             // 2️⃣ Наполняем. Галочку ставим по РЕАЛЬНОМУ состоянию окна (окно могло поменяться с прошлого раза).
-            // 📝 Меню на АНГЛИЙСКОМ (как в Plasma/KWin и как принято в Windows-тулзах): проект публичный
-            // на GitHub, и английские подписи читаются всеми. Русский оставлен в комментариях кода.
+            // 📝 Menu labels are in ENGLISH on purpose: the project is public on GitHub, English reads
+            //   for everyone, and it matches KWin/Plasma. Russian stays in the code comments.
             AppendChecked(menu, (uint)MenuId.ToggleTopmost, "Always on Top", WindowOps.IsTopmost(target)); // 🔝 Главный пункт
             AppendSeparator(menu); // ───────────────
 
