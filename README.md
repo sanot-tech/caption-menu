@@ -9,12 +9,12 @@ check mark that toggles on and off with the same right-click — exactly how KWi
 ```
   +---------------------------- Notepad ------------- [] [X] -+  <-- right-click here
   |                                                          |  CaptionMenu intercepts
-  |   Always on Top                 [x]                     |  and blocks the system menu
-  |   -------------------------------------------------------  |
+  |   Always on Top                 [x]                      |  and blocks the system menu
+  |   -------------------------------------------------------|
   |   Move                                                   |
   |   Resize                                                 |
   |   Center                                                 |
-  |   -------------------------------------------------------  |
+  |   -------------------------------------------------------|
   |   Minimize                                               |
   |   Maximize                                               |
   |   Close                                                  |
